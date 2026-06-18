@@ -255,6 +255,17 @@ public enum PhpVersion {
     public boolean hasStaticReturnType() {
         return this.compareTo(PhpVersion.PHP_80) >= 0;
     }
+    
+    /**
+     * Check whether this version supports the static return type. (as of PHP 8.0)
+     *
+     * @return {@code true} if this version supports self return type,
+     * {@code false} otherwise
+     * @since 2.107
+     */
+    public boolean hasSelfReturnType() {
+        return this.compareTo(PhpVersion.PHP_70) >= 0;
+    }
 
     /**
      * Check whether this version supports the never type.
