@@ -257,7 +257,7 @@ public enum PhpVersion {
     }
     
     /**
-     * Check whether this version supports the static return type. (as of PHP 8.0)
+     * Check whether this version supports the self return type. (as of PHP 7.0)
      *
      * @return {@code true} if this version supports self return type,
      * {@code false} otherwise
