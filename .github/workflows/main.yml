@@ -153,16 +153,19 @@ jobs:
         with:
           java-version: ${{ matrix.java }} 
           distribution: ${{ env.DEFAULT_JAVA_DISTRIBUTION }}
-          
+
+      - name: Disable javac log matcher
+        run: echo "::remove-matcher owner=javac::"
+
       - name: Checkout ${{ github.ref }} ( ${{ github.sha }} )
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
           submodules: false
           show-progress: false
 
       - name: Caching dependencies
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ~/.hgexternalcache
           key: ${{ runner.os }}-${{ hashFiles('*/external/binaries-list', '*/*/external/binaries-list') }}
@@ -207,7 +210,7 @@ jobs:
     steps:
 
       - name: Checkout ${{ github.ref }} ( ${{ github.sha }} )
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
           submodules: false
@@ -219,7 +222,7 @@ jobs:
             distribution: ${{ env.DEFAULT_JAVA_DISTRIBUTION }}
             java-version: 17
       - name: Caching dependencies
-        uses: actions/cache/restore@v5
+        uses: actions/cache/restore@v6
         with:
           path: ~/.hgexternalcache
           key: ${{ runner.os }}-${{ hashFiles('*/external/binaries-list', '*/*/external/binaries-list') }}
@@ -256,6 +259,9 @@ jobs:
         with:
           java-version: ${{ matrix.java }} 
           distribution: ${{ env.DEFAULT_JAVA_DISTRIBUTION }}
+
+      - name: Disable javac log matcher
+        run: echo "::remove-matcher owner=javac::"
 
       - name: Setup Xvfb
         if: contains(matrix.os, 'ubuntu') && success()
@@ -317,7 +323,7 @@ jobs:
 
       - name: Checkout ${{ github.ref }} ( ${{ github.sha }} )
         if: ${{ !cancelled() }}
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
           submodules: false
@@ -340,6 +346,9 @@ jobs:
         with:
           java-version: ${{ matrix.java }} 
           distribution: ${{ env.DEFAULT_JAVA_DISTRIBUTION }}
+
+      - name: Disable javac log matcher
+        run: echo "::remove-matcher owner=javac::"
 
       - name: Check line endings and verify RAT report
         if: ${{ !cancelled() }}
@@ -393,6 +402,9 @@ jobs:
         with:
           java-version: ${{ matrix.java }} 
           distribution: ${{ env.DEFAULT_JAVA_DISTRIBUTION }}
+
+      - name: Disable javac log matcher
+        run: echo "::remove-matcher owner=javac::"
 
       - name: Setup Xvfb
         run: |
@@ -458,6 +470,10 @@ jobs:
           java-version: 25
           distribution: ${{ env.DEFAULT_JAVA_DISTRIBUTION }}
 
+      - name: Disable javac log matcher
+        if: env.test_javadoc == 'true' && success()
+        run: echo "::remove-matcher owner=javac::"
+
       - name: Build javadoc
         if: env.test_javadoc == 'true' && success()
         run: |
@@ -493,6 +509,9 @@ jobs:
           java-version: ${{ matrix.java }} 
           distribution: ${{ env.DEFAULT_JAVA_DISTRIBUTION }}
 
+      - name: Disable javac log matcher
+        run: echo "::remove-matcher owner=javac::"
+
       - name: Download Build
         uses: actions/download-artifact@v8
         with:
@@ -502,7 +521,7 @@ jobs:
         run: tar --zstd -xf build.tar.zst
 
       - name: Restoring Cache
-        uses: actions/cache/restore@v5
+        uses: actions/cache/restore@v6
         with:
           path: ~/.hgexternalcache
           key: ${{ runner.os }}-${{ hashFiles('*/external/binaries-list', '*/*/external/binaries-list') }}
@@ -537,6 +556,9 @@ jobs:
         with:
           java-version: ${{ matrix.java }}
           distribution: ${{ env.DEFAULT_JAVA_DISTRIBUTION }}
+
+      - name: Disable javac log matcher
+        run: echo "::remove-matcher owner=javac::"
 
       - name: Setup Xvfb
         run: |
@@ -870,6 +892,9 @@ jobs:
           java-version: ${{ matrix.java }}
           distribution: ${{ env.DEFAULT_JAVA_DISTRIBUTION }}
 
+      - name: Disable javac log matcher
+        run: echo "::remove-matcher owner=javac::"
+
       - name: Setup Xvfb
         run: |
           echo "DISPLAY=:99.0" >> $GITHUB_ENV
@@ -992,6 +1017,9 @@ jobs:
         with:
           java-version: ${{ matrix.java }}
           distribution: ${{ env.DEFAULT_JAVA_DISTRIBUTION }}
+
+      - name: Disable javac log matcher
+        run: echo "::remove-matcher owner=javac::"
 
       - name: Setup Xvfb
         run: |
@@ -1156,6 +1184,9 @@ jobs:
           java-version: ${{ matrix.java }}
           distribution: ${{ env.DEFAULT_JAVA_DISTRIBUTION }}
 
+      - name: Disable javac log matcher
+        run: echo "::remove-matcher owner=javac::"
+
       - name: Setup Xvfb
         run: |
           echo "DISPLAY=:99.0" >> $GITHUB_ENV
@@ -1290,6 +1321,9 @@ jobs:
         with:
           java-version: ${{ matrix.java }} 
           distribution: ${{ env.DEFAULT_JAVA_DISTRIBUTION }}
+
+      - name: Disable javac log matcher
+        run: echo "::remove-matcher owner=javac::"
 
       - name: Setup Xvfb
         run: |
@@ -1470,10 +1504,10 @@ jobs:
     timeout-minutes: 60
     strategy:
       matrix:
-        java: [ '21', '26' ]
+        java: [ '21', '27-ea' ]
         config: [ 'batch1', 'batch2' ]
         exclude:
-          - java: ${{ github.event_name == 'pull_request' && 'nothing' || '26' }}
+          - java: ${{ github.event_name == 'pull_request' && 'nothing' || '27-ea' }}
       fail-fast: false
     steps:
 
@@ -1482,6 +1516,9 @@ jobs:
         with:
           java-version: ${{ matrix.java }} 
           distribution: ${{ env.DEFAULT_JAVA_DISTRIBUTION }}
+
+      - name: Disable javac log matcher
+        run: echo "::remove-matcher owner=javac::"
 
       - name: Setup Xvfb
         run: |
@@ -1539,6 +1576,9 @@ jobs:
           java-version: ${{ matrix.java }}
           distribution: ${{ env.DEFAULT_JAVA_DISTRIBUTION }}
 
+      - name: Disable javac log matcher
+        run: echo "::remove-matcher owner=javac::"
+
       - name: Setup Xvfb
         run: |
           echo "DISPLAY=:99.0" >> $GITHUB_ENV
@@ -1583,7 +1623,7 @@ jobs:
   profiler-test:
     name: Profiler on Linux/JDK ${{ matrix.java }}
     # equals env.test_java == 'true'
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'Java') || contains(github.event.pull_request.labels.*.name, 'ci:all-tests') || github.event_name != 'pull_request' }}
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'Java') || contains(github.event.pull_request.labels.*.name, 'profiler') || contains(github.event.pull_request.labels.*.name, 'ci:all-tests') || github.event_name != 'pull_request' }}
     needs: base-build
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -1599,6 +1639,9 @@ jobs:
           java-version: ${{ matrix.java }}
           distribution: ${{ env.DEFAULT_JAVA_DISTRIBUTION }}
 
+      - name: Disable javac log matcher
+        run: echo "::remove-matcher owner=javac::"
+
       - name: Setup Xvfb
         run: |
           echo "DISPLAY=:99.0" >> $GITHUB_ENV
@@ -1611,6 +1654,10 @@ jobs:
 
       - name: Extract
         run: tar --zstd -xf build.tar.zst
+
+      - name: lib.profiler
+        # test-unit's build dependency also compiles this module's legacy QA-functional sources.
+        run: ant $OPTS -f profiler/lib.profiler test-unit -Ddisable.qa-functional.tests=true
 
       - name: profiler
         run: ant $OPTS -f profiler/profiler test-unit
@@ -1643,6 +1690,9 @@ jobs:
         with:
           java-version: ${{ matrix.java }}
           distribution: ${{ env.DEFAULT_JAVA_DISTRIBUTION }}
+
+      - name: Disable javac log matcher
+        run: echo "::remove-matcher owner=javac::"
 
       - name: Setup Xvfb
         run: |
@@ -1822,6 +1872,9 @@ jobs:
           java-version: ${{ matrix.java }} 
           distribution: ${{ env.DEFAULT_JAVA_DISTRIBUTION }}
 
+      - name: Disable javac log matcher
+        run: echo "::remove-matcher owner=javac::"
+
       - name: Setup Xvfb
         run: |
           echo "DISPLAY=:99.0" >> $GITHUB_ENV
@@ -1871,6 +1924,9 @@ jobs:
         with:
           java-version: ${{ matrix.java }} 
           distribution: ${{ env.DEFAULT_JAVA_DISTRIBUTION }}
+
+      - name: Disable javac log matcher
+        run: echo "::remove-matcher owner=javac::"
 
       - name: Setup Xvfb
         run: |
@@ -1923,6 +1979,9 @@ jobs:
           java-version: ${{ matrix.java }} 
           distribution: ${{ env.DEFAULT_JAVA_DISTRIBUTION }}
 
+      - name: Disable javac log matcher
+        run: echo "::remove-matcher owner=javac::"
+
       - name: Setup Xvfb
         run: |
           echo "DISPLAY=:99.0" >> $GITHUB_ENV
@@ -1970,6 +2029,9 @@ jobs:
         with:
           java-version: ${{ matrix.java }} 
           distribution: ${{ env.DEFAULT_JAVA_DISTRIBUTION }}
+
+      - name: Disable javac log matcher
+        run: echo "::remove-matcher owner=javac::"
 
       - name: Setup Xvfb
         run: |
@@ -2216,6 +2278,9 @@ jobs:
           java-version: ${{ matrix.java }} 
           distribution: ${{ env.DEFAULT_JAVA_DISTRIBUTION }}
 
+      - name: Disable javac log matcher
+        run: echo "::remove-matcher owner=javac::"
+
       - name: Setup Xvfb
         run: |
           echo "DISPLAY=:99.0" >> $GITHUB_ENV
@@ -2309,6 +2374,9 @@ jobs:
           java-version: ${{ matrix.java }} 
           distribution: ${{ env.DEFAULT_JAVA_DISTRIBUTION }}
 
+      - name: Disable javac log matcher
+        run: echo "::remove-matcher owner=javac::"
+
       - name: Setup Xvfb
         run: |
           echo "DISPLAY=:99.0" >> $GITHUB_ENV
@@ -2378,10 +2446,13 @@ jobs:
           java-version: ${{ matrix.java }} 
           distribution: ${{ env.DEFAULT_JAVA_DISTRIBUTION }}
 
+      - name: Disable javac log matcher
+        run: echo "::remove-matcher owner=javac::"
+
       # linux specific setup
       - name: Setup PHP
         if: contains(matrix.os, 'ubuntu')
-        uses: shivammathur/setup-php@accd6127cb78bee3e8082180cb391013d204ef9f # v2.37.0
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2.37.2
         with:
           php-version: '8.3'
           tools: pecl
@@ -2517,6 +2588,9 @@ jobs:
           java-version: ${{ matrix.java }} 
           distribution: ${{ env.DEFAULT_JAVA_DISTRIBUTION }}
 
+      - name: Disable javac log matcher
+        run: echo "::remove-matcher owner=javac::"
+
       - name: Setup Xvfb
         run: |
           echo "DISPLAY=:99.0" >> $GITHUB_ENV
@@ -2580,13 +2654,13 @@ jobs:
     steps:
 
       - name: Delete Workspace Artifact
-        uses: geekyeggo/delete-artifact@f275313e70c08f6120db482d7a6b98377786765b # v5.1.0
+        uses: geekyeggo/delete-artifact@176a747ab7e287e3ff4787bf8a148716375ca118 # v6.0.0
         with:
           name: build.tar.zst 
           useGlob: false
 
       - name: Delete Dev Build Artifact
-        uses: geekyeggo/delete-artifact@f275313e70c08f6120db482d7a6b98377786765b # v5.1.0
+        uses: geekyeggo/delete-artifact@176a747ab7e287e3ff4787bf8a148716375ca118 # v6.0.0
         if: ${{ contains(github.event.pull_request.labels.*.name, 'ci:dev-build') && cancelled() }}
         with:
           name: dev-build_${{github.event.pull_request.number || github.run_id}}.zip

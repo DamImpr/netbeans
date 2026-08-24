@@ -113,7 +113,6 @@ public class Reformatter implements ReformatTask {
             ClasspathInfo cpInfo = ClasspathInfo.create(JavaPlatformManager.getDefault().getDefaultPlatform().getBootstrapLibraries(), empty, empty);
             JavacTaskImpl javacTask = JavacParser.createJavacTask(cpInfo, null, null, null, null, null, null, null, Arrays.asList(FileObjects.memoryFileObject("","Scratch.java", text)));
             com.sun.tools.javac.util.Context ctx = javacTask.getContext();
-            JavaCompiler.instance(ctx).genEndPos = true;
             CompilationUnitTree tree = javacTask.parse().iterator().next(); //NOI18N
             SourcePositions sp = JavacTrees.instance(ctx).getSourcePositions();
             TokenSequence<JavaTokenId> tokens = TokenHierarchy.create(text, JavaTokenId.language()).tokenSequence(JavaTokenId.language());
@@ -1276,148 +1275,112 @@ public class Reformatter implements ReformatTask {
         }
 
         private Boolean scanRecord(ClassTree node, Void p) {
-            boolean old = continuationIndent;
-            int oldIndent = indent;
-            try {
-                ModifiersTree mods = node.getModifiers();
-                if (mods != null) {
-                    if (scan(mods, p)) {
-                        continuationIndent = true;
-                        if (cs.placeNewLineAfterModifiers()) {
-                            newline();
-                        } else {
-                            space();
-                        }
-                    } else if (afterAnnotation) {
+            boolean oldContinuationIndent = continuationIndent;
+            ModifiersTree mods = node.getModifiers();
+            if (mods != null) {
+                if (scan(mods, p)) {
+                    continuationIndent = true;
+                    if (cs.placeNewLineAfterModifiers()) {
                         newline();
+                    } else {
+                        space();
                     }
-                    afterAnnotation = false;
+                } else if (afterAnnotation) {
+                    newline();
                 }
-                accept(IDENTIFIER);
-                continuationIndent = true;
-                space();
-
-                if (!ERROR.contentEquals(node.getSimpleName())) {
-                    accept(IDENTIFIER, UNDERSCORE);
-                }
-
-                List<? extends TypeParameterTree> tparams = node.getTypeParameters();
-                if (tparams != null && !tparams.isEmpty()) {
-                    if (LT == accept(LT)) {
-                        tpLevel++;
-                    }
-
-                    for (Iterator<? extends TypeParameterTree> it = tparams.iterator(); it.hasNext();) {
-                        TypeParameterTree tparam = it.next();
-                        scan(tparam, p);
-                        if (it.hasNext()) {
-                            spaces(cs.spaceBeforeComma() ? 1 : 0);
-                            accept(COMMA);
-                            spaces(cs.spaceAfterComma() ? 1 : 0);
-                        }
-                    }
-                    JavaTokenId accepted;
-                    if (tpLevel > 0 && (accepted = accept(GT, GTGT, GTGTGT)) != null) {
-                        switch (accepted) {
-                            case GTGTGT:
-                                tpLevel -= 3;
-                                break;
-                            case GTGT:
-                                tpLevel -= 2;
-                                break;
-                            case GT:
-                                tpLevel--;
-                                break;
-                        }
-                    }
-                    spaces(0, true);
-                }
-
-                spaces(cs.spaceBeforeMethodDeclParen() ? 1 : 0);
-                accept(LPAREN);
-                List<? extends Tree> members = node.getMembers();
-                List recParams = new ArrayList<Tree>();
-
-                for (Tree member : members) {
-                    if (member.getKind() == Tree.Kind.VARIABLE) {
-                        ModifiersTree modifiers = ((VariableTree) member).getModifiers();
-                        Set<Modifier> modifierSet = modifiers.getFlags();
-
-                        if (!modifierSet.contains(Modifier.STATIC)) {
-                            recParams.add(member);
-                        }
-                    }
-                }
-
-                if (!recParams.isEmpty()) {
-                    spaces(cs.spaceWithinMethodDeclParens() ? 1 : 0, true);
-                    wrapList(cs.wrapMethodParams(), cs.alignMultilineMethodParams(), false, COMMA, recParams);
-                    spaces(cs.spaceWithinMethodDeclParens() ? 1 : 0, true); // solves #7403
-                }
-                accept(RPAREN);
-                List<? extends Tree> impls = node.getImplementsClause();
-                if (impls != null && !impls.isEmpty()) {
-                    wrapToken(cs.wrapExtendsImplementsKeyword(), 1, IMPLEMENTS);
-                    wrapList(cs.wrapExtendsImplementsList(), cs.alignMultilineImplements(), true, COMMA, impls);
-                }
-                int oldLastIndent = lastIndent;
-                int lastMaxPreservedBlankLines = maxPreservedBlankLines;
-                maxPreservedBlankLines = cs.getMaximumBlankLinesInDeclarations();
-                classLeftBracePlacement();
-
-                continuationIndent = old;
-                try {
-                    if (members != null && !members.isEmpty()) {
-
-                        boolean isFirstMember = true;
-                        blankLines(node.getSimpleName().length() == 0 ? 0 : cs.getBlankLinesAfterClassHeader());
-                        for (Tree member : members) {
-                            if (recParams.contains(member)) {
-                                continue;
-                            }
-                            blankLines(0);
-                            switch (member.getKind()) {
-                                case VARIABLE:
-                                    boolean b = tokens.moveNext();
-                                    if (b) {
-                                        tokens.movePrevious();
-                                        if (!isFirstMember) {
-                                            blankLines(cs.getBlankLinesBeforeFields());
-                                        }
-                                        scan(member, p);
-                                        blankLines(cs.getBlankLinesAfterFields());
-                                    }
-                                    break;
-                                default:
-                                    if (!isFirstMember) {
-                                        blankLines(cs.getBlankLinesBeforeMethods());
-                                    }
-                                    scan(member, p);
-                                    blankLines(cs.getBlankLinesAfterMethods());
-                            }
-                            if (isFirstMember) {
-                                isFirstMember = false;
-                            }
-                        }
-                    }
-                } finally {
-                    indent = oldIndent;
-                    lastIndent = oldLastIndent;
-                    continuationIndent = old;
-                    maxPreservedBlankLines = lastMaxPreservedBlankLines;
-                }
-                newline();
-                accept(RBRACE);
-            } finally {
-                continuationIndent = old;
+                afterAnnotation = false;
             }
-            return true;
-        }
+            accept(IDENTIFIER);
+            continuationIndent = true;
+            space();
 
-        private void classLeftBracePlacement() {
+            if (!ERROR.contentEquals(node.getSimpleName())) {
+                accept(IDENTIFIER, UNDERSCORE);
+            }
+
+            List<? extends TypeParameterTree> tparams = node.getTypeParameters();
+            if (tparams != null && !tparams.isEmpty()) {
+                if (LT == accept(LT)) {
+                    tpLevel++;
+                }
+
+                for (Iterator<? extends TypeParameterTree> it = tparams.iterator(); it.hasNext();) {
+                    TypeParameterTree tparam = it.next();
+                    scan(tparam, p);
+                    if (it.hasNext()) {
+                        spaces(cs.spaceBeforeComma() ? 1 : 0);
+                        accept(COMMA);
+                        spaces(cs.spaceAfterComma() ? 1 : 0);
+                    }
+                }
+                JavaTokenId accepted;
+                if (tpLevel > 0 && (accepted = accept(GT, GTGT, GTGTGT)) != null) {
+                    switch (accepted) {
+                        case GTGTGT:
+                            tpLevel -= 3;
+                            break;
+                        case GTGT:
+                            tpLevel -= 2;
+                            break;
+                        case GT:
+                            tpLevel--;
+                            break;
+                    }
+                }
+                spaces(0, true);
+            }
+
+            spaces(cs.spaceBeforeMethodDeclParen() ? 1 : 0);
+            accept(LPAREN);
+
+            List<? extends Tree> members = node.getMembers();
+            List recParams = new ArrayList<Tree>();
+
+            for (Tree member : members) {
+                if (member.getKind() == Tree.Kind.VARIABLE) {
+                    ModifiersTree modifiers = ((VariableTree) member).getModifiers();
+                    Set<Modifier> modifierSet = modifiers.getFlags();
+
+                    if (!modifierSet.contains(Modifier.STATIC)) {
+                        recParams.add(member);
+                    }
+                }
+            }
+
+            if (!recParams.isEmpty()) {
+                spaces(cs.spaceWithinMethodDeclParens() ? 1 : 0, true);
+                wrapList(cs.wrapMethodParams(), cs.alignMultilineMethodParams(), false, COMMA, recParams);
+                spaces(cs.spaceWithinMethodDeclParens() ? 1 : 0, true); // solves #7403
+            }
+            accept(RPAREN);
+            List<? extends Tree> impls = node.getImplementsClause();
+            if (impls != null && !impls.isEmpty()) {
+                wrapToken(cs.wrapExtendsImplementsKeyword(), 1, IMPLEMENTS);
+                wrapList(cs.wrapExtendsImplementsList(), cs.alignMultilineImplements(), true, COMMA, impls);
+            }
+            continuationIndent = oldContinuationIndent;
+
+            int lastMaxPreservedBlankLines = maxPreservedBlankLines;
+            maxPreservedBlankLines = cs.getMaximumBlankLinesInDeclarations();
+
             CodeStyle.BracePlacement bracePlacement = cs.getClassDeclBracePlacement();
             boolean spaceBeforeLeftBrace = cs.spaceBeforeClassDeclLeftBrace();
-            int old = indent = lastIndent;
+
+            // check for empty {} body and leave as is across all brace placement modes
+            int i = tokens.index();
+            int c = col;
+            Diff d = diffs.isEmpty() ? null : diffs.getFirst();
+            spaces(spaceBeforeLeftBrace ? 1 : 0, tokens.offset() < startOffset);
+            accept(LBRACE);
+            if (tokens.token().id() == RBRACE) {
+                accept(RBRACE);
+                return true;
+            } else {
+                // not empty body so rollback and continue
+                rollback(i, c, d);
+            }
+
+            int oldIndent = indent = lastIndent;
             int halfIndent = lastIndent;
             switch (bracePlacement) {
                 case SAME_LINE:
@@ -1445,7 +1408,49 @@ public class Reformatter implements ReformatTask {
                     accept(LBRACE);
                     break;
             }
+
+            if (members != null && !members.isEmpty()) {
+
+                boolean isFirstMember = true;
+                blankLines(node.getSimpleName().length() == 0 ? 0 : cs.getBlankLinesAfterClassHeader());
+                for (Tree member : members) {
+                    if (recParams.contains(member)) {
+                        continue;
+                    }
+                    blankLines(0);
+                    switch (member.getKind()) {
+                        case VARIABLE:
+                            boolean b = tokens.moveNext();
+                            if (b) {
+                                tokens.movePrevious();
+                                if (!isFirstMember) {
+                                    blankLines(cs.getBlankLinesBeforeFields());
+                                }
+                                scan(member, p);
+                                blankLines(cs.getBlankLinesAfterFields());
+                            }
+                            break;
+                        default:
+                            if (!isFirstMember) {
+                                blankLines(cs.getBlankLinesBeforeMethods());
+                            }
+                            scan(member, p);
+                            blankLines(cs.getBlankLinesAfterMethods());
+                    }
+                    if (isFirstMember) {
+                        isFirstMember = false;
+                    }
+                }
+            }
+            indent = halfIndent;
+            newline();
+            accept(RBRACE);
+            indent = lastIndent = oldIndent;
+            continuationIndent = oldContinuationIndent;
+            maxPreservedBlankLines = lastMaxPreservedBlankLines;
+            return true;
         }
+
 
         @Override
         public Boolean visitMethod(MethodTree node, Void p) {
@@ -2220,7 +2225,7 @@ public class Reformatter implements ReformatTask {
                     }
                 }
                 try {
-                    wrapOperatorAndTree(cs.wrapLambdaArrow(), -1, cs.spaceAroundLambdaArrow() ? 1 : 0, cs.spaceAroundLambdaArrow() ? 1 : 0, lastIndent, node.getBody());
+                    wrapOperatorAndTree(cs.wrapLambdaArrow(), -1, cs.spaceAroundLambdaArrow() ? 1 : 0, cs.spaceAroundLambdaArrow() ? 1 : 0, -1, node.getBody());
                 } finally {
                     continuationIndent = old;
                     indent = oldIndent;
@@ -3042,7 +3047,14 @@ public class Reformatter implements ReformatTask {
                 }
             }
             else if (caseBody != null) {
-                newline();
+                switch (cs.wrapCaseStatements()) {
+                    case WRAP_ALWAYS -> {
+                        newline();
+                    }
+                    default -> {
+                        spaces(1, true);
+                    }
+                }
                 scan(caseBody, p);
                 spaces(cs.spaceBeforeSemi() ? 1 : 0);
                 accept(SEMICOLON);
